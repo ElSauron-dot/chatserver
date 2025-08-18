@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# API anahtarını burada saklıyoruz, kullanıcı göremez
+# API anahtarı burada güvenli
 client = OpenAI(
     api_key="c49adde8-161b-4412-ac30-55b0b106677d",
     base_url="https://api.sambanova.ai/v1",
@@ -34,4 +34,5 @@ def chat():
         return jsonify({"answer": f"Hata: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
