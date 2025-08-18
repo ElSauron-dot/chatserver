@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from openai import OpenAI
-import base64
 import os
+import base64
 
 app = Flask(__name__)
+CORS(app)  # Tüm frontend isteklerine izin ver
 
-# API anahtarı burada güvenli
+# API anahtarı güvenli şekilde burada
 client = OpenAI(
     api_key="c49adde8-161b-4412-ac30-55b0b106677d",
     base_url="https://api.sambanova.ai/v1",
