@@ -1,40 +1,45 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 from openai import OpenAI
 import os
-import base64
 
 app = Flask(__name__)
-CORS(app)  # Tüm frontend isteklerine izin ver
 
-# API anahtarı güvenli şekilde burada
-client = OpenAI(
-    api_key="c49adde8-161b-4412-ac30-55b0b106677d",
-    base_url="https://api.sambanova.ai/v1",
-)
+# SambaNova / OpenAI tarzı API key
+API_KEY = "c49adde8-161b-4412-ac30-55b0b106677d"  # kendi key’inle değiştir
+client = OpenAI(api_key=API_KEY, base_url="https://api.sambanova.ai/v1")
 
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
-    question = data.get("question", "")
-    image_base64 = data.get("image_base64", None)
+    user_message = data.get("message", "")
 
-    messages = [{"role": "user", "content": question}]
-    if image_base64:
-        messages[0]["content"] += "\n[IMAGE_BASE64:" + image_base64 + "]"
+    if not user_message:
+        return jsonify({"reply": "Mesaj boş olamaz."})
 
     try:
         response = client.chat.completions.create(
             model="Llama-4-Maverick-17B-128E-Instruct",
-            messages=messages,
-            temperature=0.1,
-            top_p=0.1
+            messages=[{"role": "user", "content":[{"type":"text","text": user_message}]}],
+            temperature=0.7,
+            top_p=0.9
         )
-        answer = response.choices[0].message.content
-        return jsonify({"answer": answer})
+
+        # Yanıt yapısını kontrol et
+        if response.choices:
+            msg = response.choices[0]
+            if hasattr(msg, "message") and msg.message:
+                reply = msg.message.content
+            elif hasattr(msg, "content"):
+                reply = msg.content
+            else:
+                reply = "Modelden cevap gelmedi."
+        else:
+            reply = "Modelden cevap gelmedi."
+
+        return jsonify({"reply": reply})
+
     except Exception as e:
-        return jsonify({"answer": f"Hata: {str(e)}"}), 500
+        return jsonify({"reply": f"Hata oluştu: {str(e)}"})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
